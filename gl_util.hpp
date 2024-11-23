@@ -2,12 +2,51 @@
 #define GL_UTIL_HPP
 
 #include <iostream>
+#include <string>
+#include <map>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <settings.hpp>
+
+using namespace std;
+
+// ----------------------------------
+
+namespace Textures {
+    enum TextureEnums {
+        Background = 0,
+        Floor = 1,
+        Ground = 2,
+        GroundShawow = 3,
+        Clouds = 4,
+        N_Textures =5,
+    };
+
+    struct Dim {
+        float w;
+        float h;
+    };
+    struct Texture {
+        unsigned int texture;
+        Dim dim;
+    };
+    struct TextureConfig {
+        string texture_path;
+        Dim dim;
+    };
+
+    const map<int, TextureConfig> TextureLoads = {
+        {Background, {"pngs/background_1440_900.png", {Settings::SCR_WIDTH, Settings::SCR_HEIGHT}}},
+        {Floor, {"pngs/ground/stone_dark_32_32.png", {32.0f, 32.0f}}},
+        {Ground, {"pngs/ground/stone_32_32.png", {32.0f, 32.0f}}},
+        {GroundShawow, {"pngs/ground/shadow_32_32.png", {32.0f, 32.0f}}},
+        {Clouds, {"pngs/cloud_56_37.png", {56.0f, 37.0f}}},
+    };
+
+}
 
 // TODO: adjustable with screen size, only presents e.g. 1080, 1440, 2160
 namespace Screen {

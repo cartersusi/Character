@@ -14,22 +14,6 @@
 #include "stb_image.h"
 using namespace std;
 
-/*
-enum ColorEnums {
-    WHITE = 0,
-    BLACK = 1,
-    RED = 2,
-    GREEN = 3,
-    BLUE = 4,
-};
-map<int, vector<float>> Color = {
-    {WHITE, {1.0f, 1.0f, 1.0f}},
-    {BLACK, {0.0f, 0.0f, 0.0f}},
-    {RED, {1.0f, 0.0f, 0.0f}},
-    {GREEN, {0.0f, 1.0f, 0.0f}},
-    {BLUE, {0.0f, 0.0f, 1.0f}},
-};*/
-
 // TODO: Find why this conflicts with Screen
 int window_w, window_h;
 
@@ -134,18 +118,13 @@ int main() {
     glfwSetMouseButtonCallback(window, GlCallback::MouseButtonCallback);
 
     auto goblin = Character(Goblin);
-
-    unsigned int backgorund_texture = LoadTexture("pngs/background_1440_900.png");
-
-    unsigned int floor_texture = LoadTexture("pngs/ground/stone_dark_32_32.png");
-    unsigned int ground_texture = LoadTexture("pngs/ground/stone_32_32.png");
-    unsigned int ground_shadow_texture = LoadTexture("pngs/ground/shadow_32_32.png");
-    float ground_floor_size = 32.0f;
-
-    unsigned int cloud_texture = LoadTexture("pngs/cloud_56_37.png"); 
-    float cloud_w = 56.0f;
-    float cloud_h = 37.0f;
-
+    vector<Textures::Texture> textures;
+    for (int i = 0; i < Textures::N_Textures; i++) {
+        textures.push_back({
+            LoadTexture(Textures::TextureLoads.find(i)->second.texture_path.c_str()),
+            Textures::TextureLoads.find(i)->second.dim
+        });
+    }
     Mouse::texture = LoadTexture("pngs/sword_32_32.png");
 
     glUseProgram(shader_program);
@@ -163,8 +142,8 @@ int main() {
     vector<pair<float, float>> cloud_pos;
     vector<pair<float, float>> clouds_size;
     for (int i = 0; i < n_clouds; i++) {
-        uniform_int_distribution<int> x_cloud(1, static_cast<int>(Screen::w - cloud_w));
-        uniform_int_distribution<int> y_cloud(1, static_cast<int>(Screen::h - cloud_h));
+        uniform_int_distribution<int> x_cloud(1, static_cast<int>(Screen::w - textures[Textures::Clouds].dim.w));
+        uniform_int_distribution<int> y_cloud(1, static_cast<int>(Screen::h - textures[Textures::Clouds].dim.h));
         cloud_pos.push_back({static_cast<float>(x_cloud(rng)), static_cast<float>(y_cloud(rng))});
 
         uniform_int_distribution<int> w_cloud(56*4, 56*8); 
@@ -212,38 +191,38 @@ int main() {
         // TODO(): make a general use Render fn for init renders, use this fn for Character class and background
         // TODO: render groud, floor, and background as a texture with 1 render call. Clouds and other objects will create a parallax effect for movement indication
         // background 
-        GlShaders::Render(model, shader_program, backgorund_texture, 
+        GlShaders::Render(model, shader_program, textures[Textures::Background].texture,
             Screen::w / 2.0f, Screen::h / 2.0f, 
             Screen::w, Screen::h
         );
 
         // clouds
         for (int i = 0; i < n_clouds; i++) {
-            GlShaders::Render(model, shader_program, cloud_texture, 
+            GlShaders::Render(model, shader_program, textures[Textures::Clouds].texture,
                 cloud_pos[i].first, cloud_pos[i].second, 
                 clouds_size[i].first, clouds_size[i].second
             );
         }
 
         // ground
-        for (int i = 0; i <= Screen::w / ground_floor_size; i++) {
-            for (int j = 0; j <= (Settings::MIN_GROUND_Y - ground_floor_size) / ground_floor_size; j++) {
-                GlShaders::Render(model, shader_program, ground_texture, 
-                    ground_floor_size * i, ground_floor_size * j, 
-                    ground_floor_size, ground_floor_size
+        for (int i = 0; i <= Screen::w / textures[Textures::Ground].dim.w; i++) {
+            for (int j = 0; j <= (Settings::MIN_GROUND_Y - textures[Textures::Ground].dim.w) / textures[Textures::Ground].dim.w; j++) {
+                GlShaders::Render(model, shader_program, textures[Textures::Ground].texture, 
+                    textures[Textures::Ground].dim.w * i, textures[Textures::Ground].dim.w * j, 
+                    textures[Textures::Ground].dim.w, textures[Textures::Ground].dim.w
                 );
             }
         }
 
         // floor
-        for (int i = 0; i <= Screen::w / ground_floor_size; i++) {
-            GlShaders::Render(model, shader_program, floor_texture, 
-                ground_floor_size * i, Settings::MIN_GROUND_Y - (ground_floor_size*0.75), 
-                ground_floor_size, ground_floor_size
+        for (int i = 0; i <= Screen::w / textures[Textures::Floor].dim.w; i++) {
+            GlShaders::Render(model, shader_program, textures[Textures::Floor].texture,
+                textures[Textures::Floor].dim.w * i, Settings::MIN_GROUND_Y - (textures[Textures::Floor].dim.w*0.75), 
+                textures[Textures::Floor].dim.w, textures[Textures::Floor].dim.w
             );
-            GlShaders::Render(model, shader_program, ground_shadow_texture,
-                ground_floor_size * i, Settings::MIN_GROUND_Y, 
-                ground_floor_size, ground_floor_size
+            GlShaders::Render(model, shader_program, textures[Textures::GroundShawow].texture,
+                textures[Textures::GroundShawow].dim.w * i, Settings::MIN_GROUND_Y, 
+                textures[Textures::GroundShawow].dim.w, textures[Textures::GroundShawow].dim.w
             );
         }
 
