@@ -1,5 +1,5 @@
 CXX = g++
-SRCS = render.cpp character.cpp glad/src/glad.c
+SRCS = main.cpp character.cpp glad/src/glad.c
 OBJS = $(SRCS:.cpp=.o)
 TARGET = character
 
