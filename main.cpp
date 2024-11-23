@@ -217,19 +217,15 @@ int main() {
         // TODO: render groud, floor, and background as a texture with 1 render call. Clouds and other objects will create a parallax effect for movement indication
         // background 
         GlShaders::Render(model, shader_program, backgorund_texture, 
-            Screen::w / 2.0f, 
-            Screen::h / 2.0f, 
-            Screen::w, 
-            Screen::h
+            Screen::w / 2.0f, Screen::h / 2.0f, 
+            Screen::w, Screen::h
         );
 
         // clouds
         for (int i = 0; i < n_clouds; i++) {
             GlShaders::Render(model, shader_program, cloud_texture, 
-                cloud_pos[i].first, 
-                cloud_pos[i].second, 
-                clouds_size[i].first, 
-                clouds_size[i].second
+                cloud_pos[i].first, cloud_pos[i].second, 
+                clouds_size[i].first, clouds_size[i].second
             );
         }
 
@@ -237,10 +233,8 @@ int main() {
         for (int i = 0; i <= Screen::w / ground_floor_size; i++) {
             for (int j = 0; j <= (_Character::MIN_GROUND_Y - ground_floor_size) / ground_floor_size; j++) {
                 GlShaders::Render(model, shader_program, ground_texture, 
-                    ground_floor_size * i, 
-                    ground_floor_size * j, 
-                    ground_floor_size, 
-                    ground_floor_size
+                    ground_floor_size * i, ground_floor_size * j, 
+                    ground_floor_size, ground_floor_size
                 );
             }
         }
@@ -249,13 +243,11 @@ int main() {
         for (int i = 0; i <= Screen::w / ground_floor_size; i++) {
             GlShaders::Render(model, shader_program, floor_texture, 
                 ground_floor_size * i, _Character::MIN_GROUND_Y - (ground_floor_size*0.75), 
-                ground_floor_size, 
-                ground_floor_size
+                ground_floor_size, ground_floor_size
             );
             GlShaders::Render(model, shader_program, ground_shadow_texture,
                 ground_floor_size * i, _Character::MIN_GROUND_Y, 
-                ground_floor_size, 
-                ground_floor_size
+                ground_floor_size, ground_floor_size
             );
         }
 
@@ -268,10 +260,8 @@ int main() {
         // mouse icon
         if (Mouse::visible) { 
             GlShaders::Render(model, shader_program, Mouse::texture,
-                Mouse::pos_x * ((float)Screen::w / window_w), 
-                Screen::h - (Mouse::pos_y * ((float)Screen::h / window_h)), 
-                Mouse::size_x, 
-                Mouse::size_y
+                Mouse::pos_x * ((float)Screen::w / window_w), Screen::h - (Mouse::pos_y * ((float)Screen::h / window_h)), 
+                Mouse::size_x, Mouse::size_y
             );
         }
 
