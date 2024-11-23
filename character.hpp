@@ -4,7 +4,11 @@
 #include <string>
 #include <map>
 #include <array>
-#include <glm/glm.hpp>
+#include <iostream>
+
+#include "stb_image.h"
+
+#include <gl_util.hpp>
 
 using namespace std;
 

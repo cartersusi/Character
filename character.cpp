@@ -1,13 +1,4 @@
-#include <iostream>
-
-#include <glad/glad.h>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include <character.hpp>
-
-#include "stb_image.h"
-using namespace std;
 
 unsigned int LoadTexture(char const* path) {
     stbi_set_flip_vertically_on_load(true);
@@ -170,28 +161,11 @@ void Character::UpdateTimes(float dt) {
 }
 
 void Character::Render(glm::mat4& model, unsigned int shader_program, float torso_positionX, float torso_positionY) {
-    auto lfn = [&](
-        glm::mat4& model, 
-        unsigned int shader_program, 
-        unsigned int texture, 
-        float x, 
-        float y, 
-        float width, 
-        float height
-    ) {   
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(x, y, 0.0f));
-        model = glm::scale(model, glm::vec3(width, height, 1.0f));
-        glUniformMatrix4fv(glGetUniformLocation(shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    };
-
     /*  1. left-leg  2. right-leg  3. left-arm  4. torso  5. head  6. right-arm  */
-    lfn(model, shader_program, textures[LeftLeg], torso_positionX - (texture_sizes[LeftLeg] * 0.33), torso_positionY - (texture_sizes[Torso] * 0.25), texture_sizes[LeftLeg], texture_sizes[LeftLeg]);
-    lfn(model, shader_program, textures[RightLeg], torso_positionX + (texture_sizes[RightLeg] * 0.5), torso_positionY - (texture_sizes[Torso] * 0.25), texture_sizes[RightLeg], texture_sizes[RightLeg]);
-    lfn(model, shader_program, textures[LeftArm], torso_positionX + (texture_sizes[Torso] * 0.25f), torso_positionY, texture_sizes[LeftArm], texture_sizes[LeftArm]); 
-    lfn(model, shader_program, textures[Torso], torso_positionX, torso_positionY, texture_sizes[Torso], texture_sizes[Torso]);
-    lfn(model, shader_program, textures[Head], torso_positionX, torso_positionY + (texture_sizes[Head] / 2), texture_sizes[Head], texture_sizes[Head]);
-    lfn(model, shader_program, textures[RightArm], torso_positionX - (texture_sizes[Torso] * 0.2f), torso_positionY, texture_sizes[RightArm], texture_sizes[RightArm]);
+    GlShaders::Render(model, shader_program, textures[LeftLeg], torso_positionX - (texture_sizes[LeftLeg] * 0.33), torso_positionY - (texture_sizes[Torso] * 0.25), texture_sizes[LeftLeg], texture_sizes[LeftLeg]);
+    GlShaders::Render(model, shader_program, textures[RightLeg], torso_positionX + (texture_sizes[RightLeg] * 0.5), torso_positionY - (texture_sizes[Torso] * 0.25), texture_sizes[RightLeg], texture_sizes[RightLeg]);
+    GlShaders::Render(model, shader_program, textures[LeftArm], torso_positionX + (texture_sizes[Torso] * 0.25f), torso_positionY, texture_sizes[LeftArm], texture_sizes[LeftArm]); 
+    GlShaders::Render(model, shader_program, textures[Torso], torso_positionX, torso_positionY, texture_sizes[Torso], texture_sizes[Torso]);
+    GlShaders::Render(model, shader_program, textures[Head], torso_positionX, torso_positionY + (texture_sizes[Head] / 2), texture_sizes[Head], texture_sizes[Head]);
+    GlShaders::Render(model, shader_program, textures[RightArm], torso_positionX - (texture_sizes[Torso] * 0.2f), torso_positionY, texture_sizes[RightArm], texture_sizes[RightArm]);
 }
