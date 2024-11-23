@@ -9,8 +9,6 @@ namespace Screen {
     bool fullscreen = true;
 }
 
-// ----------------------------------
-
 namespace Mouse {
     float pos_x = 0.0f;
     float pos_y = 0.0f;
@@ -20,7 +18,6 @@ namespace Mouse {
     float size_y = 32.0f;
 }
 
-// ----------------------------------
 
 namespace FrameTracker {
     float fps = 0.0f;
@@ -30,8 +27,6 @@ namespace FrameTracker {
     float current_frame_time = 0.0f;
     float dt = 0.0f;
 }
-
-// ----------------------------------
 
 namespace GlCallback {
     void FramebufferSizeCallback(GLFWwindow* window, int width, int height){

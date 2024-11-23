@@ -2,9 +2,12 @@
 #define GL_UTIL_HPP
 
 #include <iostream>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <settings.hpp>
 
 // TODO: adjustable with screen size, only presents e.g. 1080, 1440, 2160
 namespace Screen {

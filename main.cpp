@@ -8,6 +8,7 @@
 
 #include <character.hpp>
 #include <gl_util.hpp>
+#include <settings.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -231,7 +232,7 @@ int main() {
 
         // ground
         for (int i = 0; i <= Screen::w / ground_floor_size; i++) {
-            for (int j = 0; j <= (_Character::MIN_GROUND_Y - ground_floor_size) / ground_floor_size; j++) {
+            for (int j = 0; j <= (Settings::MIN_GROUND_Y - ground_floor_size) / ground_floor_size; j++) {
                 GlShaders::Render(model, shader_program, ground_texture, 
                     ground_floor_size * i, ground_floor_size * j, 
                     ground_floor_size, ground_floor_size
@@ -242,11 +243,11 @@ int main() {
         // floor
         for (int i = 0; i <= Screen::w / ground_floor_size; i++) {
             GlShaders::Render(model, shader_program, floor_texture, 
-                ground_floor_size * i, _Character::MIN_GROUND_Y - (ground_floor_size*0.75), 
+                ground_floor_size * i, Settings::MIN_GROUND_Y - (ground_floor_size*0.75), 
                 ground_floor_size, ground_floor_size
             );
             GlShaders::Render(model, shader_program, ground_shadow_texture,
-                ground_floor_size * i, _Character::MIN_GROUND_Y, 
+                ground_floor_size * i, Settings::MIN_GROUND_Y, 
                 ground_floor_size, ground_floor_size
             );
         }
