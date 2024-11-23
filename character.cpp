@@ -59,7 +59,7 @@ Character::Character(int character_type) {
         texture = LoadTexture(it->second.path.c_str());
         size = it->second.size;
     };
-    
+
     lfn(Head, head_texture, head_size);
     lfn(Torso, torso_texture, torso_size);
     lfn(LeftArm, left_arm_texture, left_arm_size);
