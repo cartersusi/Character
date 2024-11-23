@@ -189,8 +189,6 @@ int main() {
     float cloud_w = 56.0f;
     float cloud_h = 37.0f;
 
-    //mouse = Mouse{0.0f, 0.0f, true, LoadTexture("pngs/sword_32_32.png"), 32.0f};
-    //mouse = Mouse(0.0f, 0.0f, true, LoadTexture("pngs/sword_32_32.png"), 32.0f, 32.0f);
     Mouse.texture = LoadTexture("pngs/sword_32_32.png");
 
     glUseProgram(shader_program);
