@@ -539,8 +539,10 @@ int main() {
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         }
 
+        // character
         goblin.Render(model, shaderProgram, goblin.position[0], SCR_HEIGHT - (goblin.position[1] + goblin.height * 0.33f));
 
+        // mouse icon
         if (mouseTrackerVisible) { 
             model = glm::mat4(1.0f);
             float swordWidth = mouse_size;
@@ -559,6 +561,7 @@ int main() {
 
         glfwSwapBuffers(window);
 
+        // FPS Counter
         frameCount++;
         fpsTimer += dt;
         if (fpsTimer >= 1.0f) {
