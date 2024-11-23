@@ -18,38 +18,11 @@ using namespace std;
 // TODO: adjustable with screen size, only presents e.g. 1080, 1440, 2160
 const unsigned int SCR_WIDTH = 1440;
 const unsigned int SCR_HEIGHT = 900;
-const bool VSYNC = true;
-const bool FULLSCREEN = true;
-
-// ----------------------------------
 
 constexpr float CHARACTER_SCALE = 0.25f;
 
 constexpr float MAX_GROUND_Y = 300.0f;
 constexpr float MIN_GROUND_Y = 150.0f;
-
-// ----------------------------------
-
-constexpr float PLAYER_MASS = 75.0f; // kg
-
-constexpr float GRAVITY = 9.81f;  // m/s^2
-constexpr float GRAVITYPX = GRAVITY * SCR_HEIGHT;  // px/s^2
-
-constexpr float FRICTION_CO = 15.0f; // Friction coefficient 
-constexpr float SPEED = 600.0f; // px/s
-constexpr float MAX_SPEED = 600.0f; // px/s
-constexpr float JUMP_BUFFER_TIME = 0.05f;
-constexpr float COYOTE_TIME = 0.05f;
-
-// ----------------------------------
-
-const float WHITE[3] = {1.0f, 1.0f, 1.0f};
-const float BLACK[3] = {0.0f, 0.0f, 0.0f};
-const float RED[3] = {1.0f, 0.0f, 0.0f};
-const float GREEN[3] = {0.0f, 1.0f, 0.0f};
-const float BLUE[3] = {0.0f, 0.0f, 1.0f};
-
-constexpr float MOUSE_BOX_SIZE = 50.0f; // Size of the mouse box
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 unsigned int loadTexture(char const* path);
@@ -100,18 +73,6 @@ public:
     unsigned int RightLegTexture;
     float RightLegSize;
 
-    float height;
-    float width;
-
-    array<float, 2> position;
-    array<float, 2> velocity;
-    array<float, 2> acceleration;
-
-    bool on_ground;
-
-    float time_since_left_ground;
-    float time_since_jump_pressed;
-
     Character(int character_type) {
         auto character = Characters.find(character_type);
         if (character == Characters.end()) {
@@ -133,117 +94,9 @@ public:
         lfn(RightArm, RightArmTexture, RightArmSize);
         lfn(LeftLeg, LeftLegTexture, LeftLegSize);
         lfn(RightLeg, RightLegTexture, RightLegSize);
-        
-        height = TorsoSize + HeadSize + LeftLegSize;
-        width = TorsoSize;
-
-        position = {0.0f, MIN_GROUND_Y + (LeftLegSize / 2)};
-        velocity = {0.0f, 0.0f};
-        acceleration = {0.0f, 0.0f};
-
-        on_ground = true;
     }
 
-    void apply_force(float force[2]) {
-        acceleration[0] += force[0] / PLAYER_MASS;
-        acceleration[1] += force[1] / PLAYER_MASS;
-    }
-
-    float calculate_jump_velocity() {
-        float desired_jump_height = height * 0.75; // TODO: IMPL REAL PHYSICS
-        return sqrt(2.0 * GRAVITYPX * desired_jump_height);
-    }
-
-    void jump() {
-        bool can_jump = (on_ground || (time_since_left_ground >= 0.0 && time_since_left_ground < COYOTE_TIME));
-
-        if (can_jump) {
-            float jump_velocity = calculate_jump_velocity();
-            velocity[1] = -jump_velocity;
-            on_ground = false;
-            time_since_jump_pressed = -1.0;
-        }
-    }
-
-    void move(bool move_left, bool move_right) {
-        acceleration[0] = 0.0;
-
-        float force[2] = {0.0, 0.0};
-
-        if (move_left) {
-            force[0] = -SPEED * PLAYER_MASS;
-            apply_force(force);
-        }
-        if (move_right) {
-            force[0] = SPEED * PLAYER_MASS;
-            apply_force(force);
-        }
-
-        if (!move_left && !move_right && on_ground) {
-            float friction = -velocity[0] * FRICTION_CO;
-            force[0] = friction * PLAYER_MASS;
-            apply_force(force);
-        }
-
-        if (velocity[0] > MAX_SPEED) {
-            velocity[0] = MAX_SPEED;
-        } else if (velocity[0] < -MAX_SPEED) {
-            velocity[0] = -MAX_SPEED;
-        }
-    }
-
-    void update(float dt) {
-        float gravity_force[2] = {0.0, PLAYER_MASS * GRAVITYPX};
-        apply_force(gravity_force);
-
-        velocity[0] += acceleration[0] * dt;
-        velocity[1] += acceleration[1] * dt;
-
-        position[0] += velocity[0] * dt;
-        position[1] += velocity[1] * dt;
-
-        acceleration[1] = 0.0;
-
-        if (position[1] + height >= SCR_HEIGHT) {
-            position[1] = SCR_HEIGHT - height;
-            velocity[1] = 0.0;
-            if (!on_ground) {
-                on_ground = true;
-                time_since_left_ground = -1.0;
-            }
-        } else {
-            if (on_ground) {
-                time_since_left_ground = 0.0;
-            }
-            on_ground = false;
-        }
-
-        if (position[0] <= 0.0) {
-            position[0] = 0.0;
-            velocity[0] = 0.0;
-        } else if (position[0] + width >= SCR_WIDTH) {
-            position[0] = SCR_WIDTH - width;
-            velocity[0] = 0.0;
-        }
-    }
-
-    void update_timers(float dt) {
-        if (time_since_jump_pressed >= 0.0) {
-            time_since_jump_pressed += dt;
-            if (time_since_jump_pressed > JUMP_BUFFER_TIME) {
-                time_since_jump_pressed = -1.0;
-            }
-        }
-
-        if (time_since_left_ground >= 0.0) {
-            time_since_left_ground += dt;
-            if (time_since_left_ground > COYOTE_TIME) { 
-                time_since_left_ground = -1.0;
-            }
-        }
-    }
-
-    void Render(glm::mat4& model, unsigned int shaderProgram, float torsoPositionX, float torsoPositionY) {
+    void InitRender(glm::mat4& model, unsigned int shaderProgram, float torsoPositionX, float torsoPositionY) {
         auto lfn = [&](
             glm::mat4& model, 
             unsigned int shaderProgram, 
@@ -422,43 +275,10 @@ int main() {
         clouds_size.push_back({h_cloud, h_cloud * 0.64286f}); 
     }
 
-    float lastFrameTime = glfwGetTime();
-
-    bool move_left = false;
-    bool move_right = false;
-    bool jump_pressed = false;
-    bool spaceKeyPressedLastFrame = false;
-
-    //double mouseX, mouseY;
-
     while (!glfwWindowShouldClose(window))
     {
-
-        float currentFrameTime = glfwGetTime();
-        float dt = currentFrameTime - lastFrameTime;
-        lastFrameTime = currentFrameTime;
-
-        glfwPollEvents();
-
-        move_left = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
-        move_right = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
-        jump_pressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
-
-        if (jump_pressed && !spaceKeyPressedLastFrame) {
-            goblin.time_since_jump_pressed = 0.0;
-        }
-        spaceKeyPressedLastFrame = jump_pressed;
-
-        goblin.move(move_left, move_right);
-
-        goblin.update_timers(dt);
-
-        if (goblin.time_since_jump_pressed >= 0.0) {
-            goblin.jump();
-        }
-
-        goblin.update(dt);
-        
+        // TODO: inputs
+        // have: jumping, move (l,r), mouse click (l,r), mouse move
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -516,10 +336,11 @@ int main() {
             glBindTexture(GL_TEXTURE_2D, groundShadowTexture);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         }
-
-        goblin.Render(model, shaderProgram, goblin.position[0], SCR_HEIGHT - (goblin.position[1] + goblin.height * 0.33f));
+        
+        goblin.InitRender(model, shaderProgram, torsoPositionX, torsoPositionY);
 
         glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     glDeleteVertexArrays(1, &VAO); 
