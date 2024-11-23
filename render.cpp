@@ -230,6 +230,7 @@ int main() {
         /* 1. background   2. clouds   3. ground   4. floor   5. character   6. mouse icon */
         // background 
         // TODO: make a general use Render fn for init renders, use this fn for Character class and background
+        // TODO: render groud, floor, and background as a texture with 1 render call. Clouds and other objects will create a parallax effect for movement indication
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f, 0.0f));
         model = glm::scale(model, glm::vec3(SCR_WIDTH, SCR_HEIGHT, 1.0f));
