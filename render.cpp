@@ -16,8 +16,8 @@
 using namespace std;
 
 // TODO: adjustable with screen size, only presents e.g. 1080, 1440, 2160
-const unsigned int SCR_WIDTH = 1440;
-const unsigned int SCR_HEIGHT = 900;
+unsigned int SCR_WIDTH = 1440;
+unsigned int SCR_HEIGHT = 900; 
 const bool VSYNC = true;
 const bool FULLSCREEN = true;
 
@@ -32,8 +32,8 @@ constexpr float MIN_GROUND_Y = 150.0f;
 
 constexpr float PLAYER_MASS = 75.0f; // kg
 
-constexpr float GRAVITY = 9.81f;  // m/s^2
-constexpr float GRAVITYPX = GRAVITY * SCR_HEIGHT;  // px/s^2
+float GRAVITY = 9.81f;  // m/s^2
+float GRAVITYPX = GRAVITY * SCR_HEIGHT;  // px/s^2
 
 constexpr float FRICTION_CO = 15.0f; // Friction coefficient 
 constexpr float SPEED = 600.0f; // px/s
@@ -49,12 +49,22 @@ const float RED[3] = {1.0f, 0.0f, 0.0f};
 const float GREEN[3] = {0.0f, 1.0f, 0.0f};
 const float BLUE[3] = {0.0f, 0.0f, 1.0f};
 
-constexpr float MOUSE_BOX_SIZE = 50.0f; // Size of the mouse box
+// ----------------------------------
+
+float mouseX = 0.0f;
+float mouseY = 0.0f;
+bool mouseTrackerVisible = true;
+int windowWidth, windowHeight;
+
+// ----------------------------------
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 unsigned int loadTexture(char const* path);
 unsigned int compileShader(GLenum type, const char* source);
 unsigned int createShaderProgram(const char* vertexSource, const char* fragmentSource);
+void mouse_position_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+
 
 enum CharactersEnums {
     Goblin = 0,
@@ -305,6 +315,11 @@ int main() {
         glfwTerminate();
         return -1;
     }
+    if (VSYNC) {
+        glfwSwapInterval(1);
+    } else {
+        glfwSwapInterval(0);
+    }
     glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -347,8 +362,7 @@ int main() {
     )";
 
     unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
-    if (shaderProgram == 0)
-    {
+    if (shaderProgram == 0) {
         std::cerr << "Failed to create shader program\n";
         return -1;
     }
@@ -383,17 +397,24 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))); 
     glEnableVertexAttribArray(1); 
 
+    glfwSetCursorPosCallback(window, mouse_position_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+
     auto goblin = Character(Goblin);
 
     unsigned int backgorundTexture = loadTexture("pngs/background_1440_900.png");
-    
+
     unsigned int floorTexture = loadTexture("pngs/ground/stone_dark_32_32.png");
     unsigned int groundTexture = loadTexture("pngs/ground/stone_32_32.png");
     unsigned int groundShadowTexture = loadTexture("pngs/ground/shadow_32_32.png");
-    unsigned int cloudTexture = loadTexture("pngs/cloud_56_37.png"); 
     float ground_floor_size = 32.0f;
+
+    unsigned int cloudTexture = loadTexture("pngs/cloud_56_37.png"); 
     float cloud_w = 56.0f;
     float cloud_h = 37.0f;
+
+    unsigned int mouseTexture = loadTexture("pngs/sword_32_32.png");
+    float mouse_size = 32.0f;
 
     glUseProgram(shaderProgram);
     glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
@@ -417,11 +438,14 @@ int main() {
         uniform_int_distribution<int> y_cloud(1, static_cast<int>(SCR_HEIGHT - cloud_h));
         cloud_pos.push_back({static_cast<float>(x_cloud(rng)), static_cast<float>(y_cloud(rng))});
 
-        uniform_int_distribution<int> w_cloud(56*2, 56*4);
+        uniform_int_distribution<int> w_cloud(56*4, 56*8); 
         float h_cloud = static_cast<float>(w_cloud(rng));
         clouds_size.push_back({h_cloud, h_cloud * 0.64286f}); 
     }
-
+    
+    float fps = 0.0f;
+    int frameCount = 0;
+    float fpsTimer = 0.0f;
     float lastFrameTime = glfwGetTime();
 
     bool move_left = false;
@@ -429,15 +453,13 @@ int main() {
     bool jump_pressed = false;
     bool spaceKeyPressedLastFrame = false;
 
-    //double mouseX, mouseY;
-
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
+        glfwGetWindowSize(window, &windowWidth, &windowHeight);
 
         float currentFrameTime = glfwGetTime();
         float dt = currentFrameTime - lastFrameTime;
         lastFrameTime = currentFrameTime;
-
+        
         glfwPollEvents();
 
         move_left = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
@@ -519,7 +541,35 @@ int main() {
 
         goblin.Render(model, shaderProgram, goblin.position[0], SCR_HEIGHT - (goblin.position[1] + goblin.height * 0.33f));
 
+        if (mouseTrackerVisible) { 
+            model = glm::mat4(1.0f);
+            float swordWidth = mouse_size;
+            float swordHeight = mouse_size;
+
+            float renderX = mouseX * ((float)SCR_WIDTH / windowWidth);
+            float renderY = SCR_HEIGHT - (mouseY * ((float)SCR_HEIGHT / windowHeight));
+
+            model = glm::translate(model, glm::vec3(renderX, renderY, 0.0f));
+            model = glm::scale(model, glm::vec3(swordWidth, swordHeight, 1.0f));
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+            glBindTexture(GL_TEXTURE_2D, mouseTexture);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        }
+
         glfwSwapBuffers(window);
+
+        frameCount++;
+        fpsTimer += dt;
+        if (fpsTimer >= 1.0f) {
+            fps = frameCount / fpsTimer;
+
+            fpsTimer = 0.0f;
+            frameCount = 0;
+
+            std::string title = "2D Character Sprites - FPS: " + std::to_string(static_cast<int>(fps));
+            glfwSetWindowTitle(window, title.c_str());
+        }
     }
 
     glDeleteVertexArrays(1, &VAO); 
@@ -532,8 +582,7 @@ int main() {
 }
 
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height){
     glViewport(0, 0, width, height);
 }
 
@@ -627,4 +676,21 @@ unsigned int createShaderProgram(const char* vertexSource, const char* fragmentS
     glDeleteShader(fragmentShader);
 
     return shaderProgram;
+}
+
+void mouse_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    mouseX = static_cast<float>(xpos);
+    mouseY = static_cast<float>(ypos);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (action == GLFW_PRESS)
+    {
+        if (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT)
+        {
+            mouseTrackerVisible = !mouseTrackerVisible;
+        }
+    }
 }
