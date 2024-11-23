@@ -69,7 +69,7 @@ namespace GlCallback {
     void MousePositionCallback(GLFWwindow* window, double xpos, double ypos);
     void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 }
-namespace Shaders {
+namespace GlShaders {
     unsigned int CompileShader(GLenum type, const char* source);
     unsigned int CreateShaderProgram(const char* vertex_source, const char* fragment_source);
 }
@@ -139,7 +139,7 @@ int main() {
     }
     )";
 
-    unsigned int shader_program = Shaders::CreateShaderProgram(vertex_shader_source, fragment_shader_source);
+    unsigned int shader_program = GlShaders::CreateShaderProgram(vertex_shader_source, fragment_shader_source);
     if (shader_program == 0) {
         throw runtime_error("Failed to create shader program");
     }
@@ -353,7 +353,7 @@ int main() {
     return 0;
 }
 
-namespace Shaders {
+namespace GlShaders {
     unsigned int CompileShader(GLenum type, const char* source) {
         unsigned int shader;
         int success;
@@ -373,13 +373,13 @@ namespace Shaders {
     }
 
     unsigned int CreateShaderProgram(const char* vertex_source, const char* fragment_source) {
-        unsigned int vertex_shader = Shaders::CompileShader(GL_VERTEX_SHADER, vertex_source);
+        unsigned int vertex_shader = GlShaders::CompileShader(GL_VERTEX_SHADER, vertex_source);
         if (vertex_shader == 0) {
             throw runtime_error("Failed to compile vertex shader");
             return 0;
         }
 
-        unsigned int fragment_shader = Shaders::CompileShader(GL_FRAGMENT_SHADER, fragment_source);
+        unsigned int fragment_shader = GlShaders::CompileShader(GL_FRAGMENT_SHADER, fragment_source);
         if (fragment_shader == 0) {
             throw runtime_error("Failed to compile fragment shader");
             return 0;
