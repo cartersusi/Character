@@ -6,7 +6,6 @@
 
 #include <character.hpp>
 
-//#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 using namespace std;
 
@@ -60,34 +59,31 @@ Character::Character(int character_type) {
         size = it->second.size;
     };
 
-    lfn(Head, head_texture, head_size);
-    lfn(Torso, torso_texture, torso_size);
-    lfn(LeftArm, left_arm_texture, left_arm_size);
-    lfn(RightArm, right_arm_texture, right_arm_size);
-    lfn(LeftLeg, LeftLegTexture, left_leg_texture);
-    lfn(RightLeg, right_leg_texture, right_leg_size);
+    for (int i = 0; i < N_BODYPARTS; i++) {
+        lfn(i, textures[i], texture_sizes[i]);
+    }
     
-    height = torso_size + head_size + left_leg_texture;
-    width = torso_size;
+    height = texture_sizes[Torso] + texture_sizes[Head] + texture_sizes[LeftLeg];
+    width = texture_sizes[Torso];
 
-    position = {0.0f, MIN_GROUND_Y + (left_leg_texture / 2)};
+    position = {0.0f, _Character::MIN_GROUND_Y + (texture_sizes[LeftLeg] / 2)};
     velocity = {0.0f, 0.0f};
     acceleration = {0.0f, 0.0f};
     on_ground = true;
 }
 
 void Character::ApplyForce(float force[2]) {
-    acceleration[0] += force[0] / PLAYER_MASS;
-    acceleration[1] += force[1] / PLAYER_MASS;
+    acceleration[0] += force[0] / _Character::PLAYER_MASS;
+    acceleration[1] += force[1] / _Character::PLAYER_MASS;
 }
 
 float Character::CalculateJumpVelocity() {
     float desired_jump_height = height * 0.75; // TODO: IMPL REAL PHYSICS
-    return sqrt(2.0 * GRAVITYPX * desired_jump_height);
+    return sqrt(2.0 * _Character::GRAVITYPX * desired_jump_height);
 }
 
 void Character::Jump() {
-    bool can_jump = (on_ground || (time_since_left_ground >= 0.0 && time_since_left_ground < COYOTE_TIME));
+    bool can_jump = (on_ground || (time_since_left_ground >= 0.0 && time_since_left_ground < _Character::COYOTE_TIME));
 
     if (can_jump) {
         float jump_velocity = CalculateJumpVelocity();
@@ -102,28 +98,28 @@ void Character::Move(bool move_left, bool move_right) {
     float force[2] = {0.0, 0.0};
 
     if (move_left) {
-        force[0] = -SPEED * PLAYER_MASS;
+        force[0] = -_Character::SPEED * _Character::PLAYER_MASS;
         ApplyForce(force);
     }
     if (move_right) {
-        force[0] = SPEED * PLAYER_MASS;
+        force[0] = _Character::SPEED * _Character::PLAYER_MASS;
         ApplyForce(force);
     }
     if (!move_left && !move_right && on_ground) {
-        float friction = -velocity[0] * FRICTION_CO;
-        force[0] = friction * PLAYER_MASS;
+        float friction = -velocity[0] * _Character::FRICTION_CO;
+        force[0] = friction * _Character::PLAYER_MASS;
         ApplyForce(force);
     }
 
-    if (velocity[0] > MAX_SPEED) {
-        velocity[0] = MAX_SPEED;
-    } else if (velocity[0] < -MAX_SPEED) {
-        velocity[0] = -MAX_SPEED;
+    if (velocity[0] > _Character::MAX_SPEED) {
+        velocity[0] = _Character::MAX_SPEED;
+    } else if (velocity[0] < -_Character::MAX_SPEED) {
+        velocity[0] = -_Character::MAX_SPEED;
     }
 }
 
 void Character::Update(float dt) {
-    float gravity_force[2] = {0.0, PLAYER_MASS * GRAVITYPX};
+    float gravity_force[2] = {0.0, _Character::PLAYER_MASS * _Character::GRAVITYPX};
     ApplyForce(gravity_force);
     
     velocity[0] += acceleration[0] * dt;
@@ -134,8 +130,8 @@ void Character::Update(float dt) {
     
     acceleration[1] = 0.0;
     
-    if (position[1] + height >= SCR_HEIGHT) {
-        position[1] = SCR_HEIGHT - height;
+    if (position[1] + height >= _Character::SCR_HEIGHT) {
+        position[1] = _Character::SCR_HEIGHT - height;
         velocity[1] = 0.0;
         if (!on_ground) {
             on_ground = true;
@@ -151,8 +147,8 @@ void Character::Update(float dt) {
     if (position[0] <= 0.0) {
         position[0] = 0.0;
         velocity[0] = 0.0;
-    } else if (position[0] + width >= SCR_WIDTH) {
-        position[0] = SCR_WIDTH - width;
+    } else if (position[0] + width >= _Character::SCR_WIDTH) {
+        position[0] = _Character::SCR_WIDTH - width;
         velocity[0] = 0.0;
     }
 }
@@ -160,14 +156,14 @@ void Character::Update(float dt) {
 void Character::UpdateTimes(float dt) {
     if (time_since_jump_pressed >= 0.0) {
         time_since_jump_pressed += dt;
-        if (time_since_jump_pressed > JUMP_BUFFER_TIME) {
+        if (time_since_jump_pressed > _Character::JUMP_BUFFER_TIME) {
             time_since_jump_pressed = -1.0;
         }
     }
 
     if (time_since_left_ground >= 0.0) {
         time_since_left_ground += dt;
-        if (time_since_left_ground > COYOTE_TIME) { 
+        if (time_since_left_ground > _Character::COYOTE_TIME) { 
             time_since_left_ground = -1.0;
         }
     }
@@ -192,10 +188,10 @@ void Character::Render(glm::mat4& model, unsigned int shader_program, float tors
     };
 
     /*  1. left-leg  2. right-leg  3. left-arm  4. torso  5. head  6. right-arm  */
-    lfn(model, shader_program, LeftLegTexture, torso_positionX - (left_leg_texture * 0.33), torso_positionY - (torso_size * 0.25), left_leg_texture, left_leg_texture);
-    lfn(model, shader_program, right_leg_texture, torso_positionX + (right_leg_size * 0.5), torso_positionY - (torso_size * 0.25), right_leg_size, right_leg_size);
-    lfn(model, shader_program, left_arm_texture, torso_positionX + (torso_size * 0.25f), torso_positionY, left_arm_size, left_arm_size); 
-    lfn(model, shader_program, torso_texture, torso_positionX, torso_positionY, torso_size, torso_size);
-    lfn(model, shader_program, head_texture, torso_positionX, torso_positionY + (head_size / 2), head_size, head_size);
-    lfn(model, shader_program, right_arm_texture, torso_positionX - (torso_size * 0.2f), torso_positionY, right_arm_size, right_arm_size);
+    lfn(model, shader_program, textures[LeftLeg], torso_positionX - (texture_sizes[LeftLeg] * 0.33), torso_positionY - (texture_sizes[Torso] * 0.25), texture_sizes[LeftLeg], texture_sizes[LeftLeg]);
+    lfn(model, shader_program, textures[RightLeg], torso_positionX + (texture_sizes[RightLeg] * 0.5), torso_positionY - (texture_sizes[Torso] * 0.25), texture_sizes[RightLeg], texture_sizes[RightLeg]);
+    lfn(model, shader_program, textures[LeftArm], torso_positionX + (texture_sizes[Torso] * 0.25f), torso_positionY, texture_sizes[LeftArm], texture_sizes[LeftArm]); 
+    lfn(model, shader_program, textures[Torso], torso_positionX, torso_positionY, texture_sizes[Torso], texture_sizes[Torso]);
+    lfn(model, shader_program, textures[Head], torso_positionX, torso_positionY + (texture_sizes[Head] / 2), texture_sizes[Head], texture_sizes[Head]);
+    lfn(model, shader_program, textures[RightArm], torso_positionX - (texture_sizes[Torso] * 0.2f), torso_positionY, texture_sizes[RightArm], texture_sizes[RightArm]);
 }
