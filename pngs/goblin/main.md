@@ -61,17 +61,17 @@ private:
     };
 public:
     unsigned int HeadTexture;
-    float HeadSize;
+    float head_size;
     unsigned int TorsoTexture;
-    float TorsoSize;
-    unsigned int LeftArmTexture;
-    float LeftArmSize;
-    unsigned int RightArmTexture;
-    float RightArmSize;
+    float torso_size;
+    unsigned int left_arm_texture;
+    float left_arm_size;
+    unsigned int right_arm_texture;
+    float right_arm_size;
     unsigned int LeftLegTexture;
-    float LeftLegSize;
-    unsigned int RightLegTexture;
-    float RightLegSize;
+    float left_leg_texture;
+    unsigned int right_leg_texture;
+    float right_leg_size;
 
     Character(int character_type) {
         auto character = Characters.find(character_type);
@@ -88,12 +88,12 @@ public:
             size = it->second.Size;
         };
 
-        lfn(Head, HeadTexture, HeadSize);
-        lfn(Torso, TorsoTexture, TorsoSize);
-        lfn(LeftArm, LeftArmTexture, LeftArmSize);
-        lfn(RightArm, RightArmTexture, RightArmSize);
-        lfn(LeftLeg, LeftLegTexture, LeftLegSize);
-        lfn(RightLeg, RightLegTexture, RightLegSize);
+        lfn(Head, HeadTexture, head_size);
+        lfn(Torso, TorsoTexture, torso_size);
+        lfn(LeftArm, left_arm_texture, left_arm_size);
+        lfn(RightArm, right_arm_texture, right_arm_size);
+        lfn(LeftLeg, LeftLegTexture, left_leg_texture);
+        lfn(RightLeg, right_leg_texture, right_leg_size);
     }
 
     void InitRender(glm::mat4& model, unsigned int shaderProgram, float torsoPositionX, float torsoPositionY) {
@@ -115,22 +115,22 @@ public:
         };
 
         /*  1. left-leg  2. right-leg  3. left-arm  4. torso  5. head  6. right-arm  */
-        lfn(model, shaderProgram, LeftLegTexture, torsoPositionX - (LeftLegSize * 0.33), torsoPositionY - (TorsoSize * 0.25), LeftLegSize, LeftLegSize);
-        lfn(model, shaderProgram, RightLegTexture, torsoPositionX + (RightLegSize * 0.5), torsoPositionY - (TorsoSize * 0.25), RightLegSize, RightLegSize);
-        lfn(model, shaderProgram, LeftArmTexture, torsoPositionX + (TorsoSize * 0.25f), torsoPositionY, LeftArmSize, LeftArmSize); 
-        lfn(model, shaderProgram, TorsoTexture, torsoPositionX, torsoPositionY, TorsoSize, TorsoSize);
-        lfn(model, shaderProgram, HeadTexture, torsoPositionX, torsoPositionY + (HeadSize / 2), HeadSize, HeadSize);
-        lfn(model, shaderProgram, RightArmTexture, torsoPositionX - (TorsoSize * 0.2f), torsoPositionY, RightArmSize, RightArmSize);
+        lfn(model, shaderProgram, LeftLegTexture, torsoPositionX - (left_leg_texture * 0.33), torsoPositionY - (torso_size * 0.25), left_leg_texture, left_leg_texture);
+        lfn(model, shaderProgram, right_leg_texture, torsoPositionX + (right_leg_size * 0.5), torsoPositionY - (torso_size * 0.25), right_leg_size, right_leg_size);
+        lfn(model, shaderProgram, left_arm_texture, torsoPositionX + (torso_size * 0.25f), torsoPositionY, left_arm_size, left_arm_size); 
+        lfn(model, shaderProgram, TorsoTexture, torsoPositionX, torsoPositionY, torso_size, torso_size);
+        lfn(model, shaderProgram, HeadTexture, torsoPositionX, torsoPositionY + (head_size / 2), head_size, head_size);
+        lfn(model, shaderProgram, right_arm_texture, torsoPositionX - (torso_size * 0.2f), torsoPositionY, right_arm_size, right_arm_size);
     }
 
     ~Character() {
         // TODO: Check if needed
         glDeleteTextures(1, &HeadTexture);
         glDeleteTextures(1, &TorsoTexture);
-        glDeleteTextures(1, &LeftArmTexture);
-        glDeleteTextures(1, &RightArmTexture);
+        glDeleteTextures(1, &left_arm_texture);
+        glDeleteTextures(1, &right_arm_texture);
         glDeleteTextures(1, &LeftLegTexture);
-        glDeleteTextures(1, &RightLegTexture);
+        glDeleteTextures(1, &right_leg_texture);
         cout << "Character destroyed" << endl;
     }
 };
@@ -258,7 +258,7 @@ int main() {
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     float torsoPositionX = SCR_WIDTH / 2.0f;
-    float torsoPositionY = goblin.LeftLegSize + MIN_GROUND_Y;
+    float torsoPositionY = goblin.left_leg_texture + MIN_GROUND_Y;
 
     uniform_int_distribution<int> dist(1, 6);
     int n_clouds = dist(rng);

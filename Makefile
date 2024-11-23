@@ -1,5 +1,6 @@
 CXX = g++
-SRCS = render.cpp glad/src/glad.c
+SRCS = render.cpp character.cpp glad/src/glad.c
+OBJS = $(SRCS:.cpp=.o)
 TARGET = character
 
 INCLUDE_DIRS = -I. -Iglad/include -I/opt/homebrew/include
@@ -9,8 +10,14 @@ LIBS = -lglfw -framework Cocoa -framework OpenGL -framework IOKit -framework Cor
 CXXFLAGS = -std=c++11 $(INCLUDE_DIRS)
 LDFLAGS = $(LIBRARY_DIRS) $(LIBS)
 
-$(TARGET): $(SRCS)
-	$(CXX) $(CXXFLAGS) $(SRCS) -o $(TARGET) $(LDFLAGS)
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET) $(LDFLAGS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+glad/src/glad.o: glad/src/glad.c
+	$(CC) -Iglad/include -c glad/src/glad.c -o glad/src/glad.o
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(OBJS) glad/src/glad.o
