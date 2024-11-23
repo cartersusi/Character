@@ -18,6 +18,3 @@ $(TARGET): $(OBJS)
 
 glad/src/glad.o: glad/src/glad.c
 	$(CC) -Iglad/include -c glad/src/glad.c -o glad/src/glad.o
-
-clean:
-	rm -f $(TARGET) $(OBJS) glad/src/glad.o

@@ -30,6 +30,15 @@ namespace Mouse {
 
 // ----------------------------------
 
+namespace Keys {
+    extern bool move_left;
+    extern bool move_right;
+    extern bool jump_pressed;
+    extern bool space_key_pressed_last_frame;
+}
+
+// ----------------------------------
+
 namespace FrameTracker {
     extern float fps;
     extern int frame_count;

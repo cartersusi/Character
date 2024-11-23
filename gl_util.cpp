@@ -18,6 +18,12 @@ namespace Mouse {
     float size_y = 32.0f;
 }
 
+namespace Keys {
+    bool move_left = false;
+    bool move_right = false;
+    bool jump_pressed = false;
+    bool space_key_pressed_last_frame = false;
+}
 
 namespace FrameTracker {
     float fps = 0.0f;

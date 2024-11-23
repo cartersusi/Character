@@ -174,11 +174,6 @@ int main() {
     
     FrameTracker::last_frame_time = glfwGetTime();
 
-    bool move_left = false;
-    bool move_right = false;
-    bool jump_pressed = false;
-    bool space_key_pressed_last_rame = false;
-
     while (!glfwWindowShouldClose(window)) {
         glfwGetWindowSize(window, &window_w, &window_h);
 
@@ -187,16 +182,16 @@ int main() {
         FrameTracker::last_frame_time = FrameTracker::current_frame_time;
         
         glfwPollEvents();
-        move_left = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
-        move_right = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
-        jump_pressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+        Keys::move_left = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
+        Keys::move_right = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
+        Keys::jump_pressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 
-        if (jump_pressed && !space_key_pressed_last_rame) {
+        if (Keys::jump_pressed && !Keys::space_key_pressed_last_frame) {
             goblin.time_since_jump_pressed = 0.0;
         }
-        space_key_pressed_last_rame = jump_pressed;
+        Keys::space_key_pressed_last_frame = Keys::jump_pressed;
         
-        goblin.Move(move_left, move_right);
+        goblin.Move(Keys::move_left, Keys::move_right);
         goblin.UpdateTimes(FrameTracker::dt);
         
         if (goblin.time_since_jump_pressed >= 0.0) {
