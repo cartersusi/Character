@@ -186,7 +186,6 @@ int main() {
         FrameTracker::last_frame_time = FrameTracker::current_frame_time;
         
         glfwPollEvents();
-
         move_left = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
         move_right = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
         jump_pressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
@@ -217,38 +216,63 @@ int main() {
         // TODO(): make a general use Render fn for init renders, use this fn for Character class and background
         // TODO: render groud, floor, and background as a texture with 1 render call. Clouds and other objects will create a parallax effect for movement indication
         // background 
-        GlShaders::Render(model, shader_program, backgorund_texture, Screen::w / 2.0f, Screen::h / 2.0f, Screen::w, Screen::h);
+        GlShaders::Render(model, shader_program, backgorund_texture, 
+            Screen::w / 2.0f, 
+            Screen::h / 2.0f, 
+            Screen::w, 
+            Screen::h
+        );
 
         // clouds
         for (int i = 0; i < n_clouds; i++) {
-            GlShaders::Render(model, shader_program, cloud_texture, cloud_pos[i].first, cloud_pos[i].second, clouds_size[i].first, clouds_size[i].second);
+            GlShaders::Render(model, shader_program, cloud_texture, 
+                cloud_pos[i].first, 
+                cloud_pos[i].second, 
+                clouds_size[i].first, 
+                clouds_size[i].second
+            );
         }
 
         // ground
         for (int i = 0; i <= Screen::w / ground_floor_size; i++) {
             for (int j = 0; j <= (_Character::MIN_GROUND_Y - ground_floor_size) / ground_floor_size; j++) {
-                GlShaders::Render(model, shader_program, ground_texture, ground_floor_size * i, ground_floor_size * j, ground_floor_size, ground_floor_size);
+                GlShaders::Render(model, shader_program, ground_texture, 
+                    ground_floor_size * i, 
+                    ground_floor_size * j, 
+                    ground_floor_size, 
+                    ground_floor_size
+                );
             }
         }
 
         // floor
         for (int i = 0; i <= Screen::w / ground_floor_size; i++) {
-            GlShaders::Render(model, shader_program, floor_texture, ground_floor_size * i, _Character::MIN_GROUND_Y - (ground_floor_size*0.75), ground_floor_size, ground_floor_size);
-            GlShaders::Render(model, shader_program, ground_shadow_texture, ground_floor_size * i, _Character::MIN_GROUND_Y, ground_floor_size, ground_floor_size);
+            GlShaders::Render(model, shader_program, floor_texture, 
+                ground_floor_size * i, _Character::MIN_GROUND_Y - (ground_floor_size*0.75), 
+                ground_floor_size, 
+                ground_floor_size
+            );
+            GlShaders::Render(model, shader_program, ground_shadow_texture,
+                ground_floor_size * i, _Character::MIN_GROUND_Y, 
+                ground_floor_size, 
+                ground_floor_size
+            );
         }
 
         // character
-        goblin.Render(model, shader_program, goblin.position[0], Screen::h - (goblin.position[1] + goblin.height * 0.33f));
+        goblin.Render(model, shader_program,
+            goblin.position[0], 
+            Screen::h - (goblin.position[1] + goblin.height * 0.33f)
+        );
 
         // mouse icon
         if (Mouse::visible) { 
-            float swordWidth = Mouse::size_x;
-            float swordHeight = Mouse::size_y;
-
-            float renderX = Mouse::pos_x * ((float)Screen::w / window_w);
-            float renderY = Screen::h - (Mouse::pos_y * ((float)Screen::h / window_h));
-
-            GlShaders::Render(model, shader_program, Mouse::texture, renderX, renderY, swordWidth, swordHeight);
+            GlShaders::Render(model, shader_program, Mouse::texture,
+                Mouse::pos_x * ((float)Screen::w / window_w), 
+                Screen::h - (Mouse::pos_y * ((float)Screen::h / window_h)), 
+                Mouse::size_x, 
+                Mouse::size_y
+            );
         }
 
         glfwSwapBuffers(window);
