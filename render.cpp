@@ -1,4 +1,5 @@
 #include <iostream>
+#include <map>
 #include <random>
 #include <chrono>
 
@@ -13,24 +14,57 @@
 using namespace std;
 
 // TODO: adjustable with screen size, only presents e.g. 1080, 1440, 2160
-const unsigned int SCR_WIDTH = 1440;
-const unsigned int SCR_HEIGHT = 900; 
-const bool VSYNC = true;
-const bool FULLSCREEN = true;
+struct _Screen {
+    unsigned int w;
+    unsigned int h;
+    bool vsync;
+    bool fullscreen;
+};
+_Screen Screen = {1440, 900, true, true};
+// ----------------------------------
+
+enum ColorEnums {
+    WHITE = 0,
+    BLACK = 1,
+    RED = 2,
+    GREEN = 3,
+    BLUE = 4,
+};
+map<int, vector<float>> Color = {
+    {WHITE, {1.0f, 1.0f, 1.0f}},
+    {BLACK, {0.0f, 0.0f, 0.0f}},
+    {RED, {1.0f, 0.0f, 0.0f}},
+    {GREEN, {0.0f, 1.0f, 0.0f}},
+    {BLUE, {0.0f, 0.0f, 1.0f}},
+};
 
 // ----------------------------------
 
-const float WHITE[3] = {1.0f, 1.0f, 1.0f};
-const float BLACK[3] = {0.0f, 0.0f, 0.0f};
-const float RED[3] = {1.0f, 0.0f, 0.0f};
-const float GREEN[3] = {0.0f, 1.0f, 0.0f};
-const float BLUE[3] = {0.0f, 0.0f, 1.0f};
+struct _Mouse {
+    float pos_x;// = 0.0f;
+    float pos_y;// = 0.0f;
+    bool visible;// = true;
+    unsigned int texture;// = 0;
+    float size_x;// = 32.0f;
+    float size_y;// = 32.0f;
+};
+_Mouse Mouse = {0.0f, 0.0f, true, 0, 32.0f, 32.0f};
 
 // ----------------------------------
 
-float mouse_x = 0.0f;
-float mouse_y = 0.0f;
-bool mouse_tracker_visible = true;
+struct _FrameTracker {
+    float fps;
+    int frame_count;
+    float fps_timer;
+    float last_frame_time;
+    float current_frame_time;
+    float dt;
+};
+_FrameTracker FrameTracker = {0.0f, 0, 0.0f, 0.0f, 0.0f, 0.0f};
+
+// ----------------------------------
+
+// TODO: Find why this conflicts with Screen 
 int window_w, window_h;
 
 // ----------------------------------
@@ -56,13 +90,13 @@ int main() {
 
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "2D Character Sprites", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(Screen.w, Screen.h, "2D Character Sprites", NULL, NULL);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
         glfwTerminate();
         return -1;
     }
-    if (VSYNC) {
+    if (Screen.vsync) {
         glfwSwapInterval(1);
     } else {
         glfwSwapInterval(0);
@@ -155,8 +189,9 @@ int main() {
     float cloud_w = 56.0f;
     float cloud_h = 37.0f;
 
-    unsigned int mouse_texture = LoadTexture("pngs/sword_32_32.png");
-    float mouse_size = 32.0f;
+    //mouse = Mouse{0.0f, 0.0f, true, LoadTexture("pngs/sword_32_32.png"), 32.0f};
+    //mouse = Mouse(0.0f, 0.0f, true, LoadTexture("pngs/sword_32_32.png"), 32.0f, 32.0f);
+    Mouse.texture = LoadTexture("pngs/sword_32_32.png");
 
     glUseProgram(shader_program);
     glUniform1i(glGetUniformLocation(shader_program, "texture1"), 0);
@@ -164,7 +199,7 @@ int main() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glm::mat4 projection = glm::ortho(0.0f, (float)SCR_WIDTH, 0.0f, (float)SCR_HEIGHT);
+    glm::mat4 projection = glm::ortho(0.0f, (float)Screen.w, 0.0f, (float)Screen.h);
     glUniformMatrix4fv(glGetUniformLocation(shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     uniform_int_distribution<int> dist(1, 6);
@@ -173,8 +208,8 @@ int main() {
     vector<pair<float, float>> cloud_pos;
     vector<pair<float, float>> clouds_size;
     for (int i = 0; i < n_clouds; i++) {
-        uniform_int_distribution<int> x_cloud(1, static_cast<int>(SCR_WIDTH - cloud_w));
-        uniform_int_distribution<int> y_cloud(1, static_cast<int>(SCR_HEIGHT - cloud_h));
+        uniform_int_distribution<int> x_cloud(1, static_cast<int>(Screen.w - cloud_w));
+        uniform_int_distribution<int> y_cloud(1, static_cast<int>(Screen.h - cloud_h));
         cloud_pos.push_back({static_cast<float>(x_cloud(rng)), static_cast<float>(y_cloud(rng))});
 
         uniform_int_distribution<int> w_cloud(56*4, 56*8); 
@@ -182,10 +217,7 @@ int main() {
         clouds_size.push_back({h_cloud, h_cloud * 0.64286f}); 
     }
     
-    float fps = 0.0f;
-    int frame_count = 0;
-    float fps_timer = 0.0f;
-    float last_frame_time = glfwGetTime();
+    FrameTracker.last_frame_time = glfwGetTime();
 
     bool move_left = false;
     bool move_right = false;
@@ -195,9 +227,9 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         glfwGetWindowSize(window, &window_w, &window_h);
 
-        float current_frame_time = glfwGetTime();
-        float dt = current_frame_time - last_frame_time;
-        last_frame_time = current_frame_time;
+        FrameTracker.current_frame_time = glfwGetTime();
+        FrameTracker.dt = FrameTracker.current_frame_time - FrameTracker.last_frame_time;
+        FrameTracker.last_frame_time = FrameTracker.current_frame_time;
         
         glfwPollEvents();
 
@@ -211,13 +243,13 @@ int main() {
         space_key_pressed_last_rame = jump_pressed;
         
         goblin.Move(move_left, move_right);
-        goblin.UpdateTimes(dt);
+        goblin.UpdateTimes(FrameTracker.dt);
         
         if (goblin.time_since_jump_pressed >= 0.0) {
             goblin.Jump();
         }
         
-        goblin.Update(dt);
+        goblin.Update(FrameTracker.dt);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -232,8 +264,8 @@ int main() {
         // TODO: make a general use Render fn for init renders, use this fn for Character class and background
         // TODO: render groud, floor, and background as a texture with 1 render call. Clouds and other objects will create a parallax effect for movement indication
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(SCR_WIDTH, SCR_HEIGHT, 1.0f));
+        model = glm::translate(model, glm::vec3(Screen.w / 2.0f, Screen.h / 2.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(Screen.w, Screen.h, 1.0f));
         glUniformMatrix4fv(glGetUniformLocation(shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glBindTexture(GL_TEXTURE_2D, backgorund_texture);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -249,7 +281,7 @@ int main() {
         }
 
         // ground
-        for (int i = 0; i <= SCR_WIDTH / ground_floor_size; i++) {
+        for (int i = 0; i <= Screen.w / ground_floor_size; i++) {
             for (int j = 0; j <= (Character::MIN_GROUND_Y - ground_floor_size) / ground_floor_size; j++) {
                 model = glm::mat4(1.0f);
                 model = glm::translate(model, glm::vec3(ground_floor_size * i, (ground_floor_size * j) + (ground_floor_size / 2), 0.0f));
@@ -261,7 +293,7 @@ int main() {
         }
 
         // floor
-        for (int i = 0; i <= SCR_WIDTH / ground_floor_size; i++) {
+        for (int i = 0; i <= Screen.w / ground_floor_size; i++) {
             model = glm::mat4(1.0f);
             // idk why it's divided by 4, but it's working
             model = glm::translate(model, glm::vec3(ground_floor_size * i, Character::MIN_GROUND_Y - (ground_floor_size/4), 0.0f));
@@ -279,36 +311,36 @@ int main() {
         }
 
         // character
-        goblin.Render(model, shader_program, goblin.position[0], SCR_HEIGHT - (goblin.position[1] + goblin.height * 0.33f));
+        goblin.Render(model, shader_program, goblin.position[0], Screen.h - (goblin.position[1] + goblin.height * 0.33f));
 
         // mouse icon
-        if (mouse_tracker_visible) { 
+        if (Mouse.visible) { 
             model = glm::mat4(1.0f);
-            float swordWidth = mouse_size;
-            float swordHeight = mouse_size;
+            float swordWidth = Mouse.size_x;
+            float swordHeight = Mouse.size_y;
 
-            float renderX = mouse_x * ((float)SCR_WIDTH / window_w);
-            float renderY = SCR_HEIGHT - (mouse_y * ((float)SCR_HEIGHT / window_h));
+            float renderX = Mouse.pos_x * ((float)Screen.w / window_w);
+            float renderY = Screen.h - (Mouse.pos_y * ((float)Screen.h / window_h));
 
             model = glm::translate(model, glm::vec3(renderX, renderY, 0.0f));
             model = glm::scale(model, glm::vec3(swordWidth, swordHeight, 1.0f));
             glUniformMatrix4fv(glGetUniformLocation(shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-            glBindTexture(GL_TEXTURE_2D, mouse_texture);
+            glBindTexture(GL_TEXTURE_2D, Mouse.texture);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         }
 
         glfwSwapBuffers(window);
 
-        frame_count++;
-        fps_timer += dt;
-        if (fps_timer >= 1.0f) {
-            fps = frame_count / fps_timer;
+        FrameTracker.frame_count++;
+        FrameTracker.fps_timer += FrameTracker.dt;
+        if (FrameTracker.fps_timer >= 1.0f) {
+            FrameTracker.fps = FrameTracker.frame_count / FrameTracker.fps_timer;
 
-            fps_timer = 0.0f;
-            frame_count = 0;
+            FrameTracker.fps_timer = 0.0f;
+            FrameTracker.frame_count = 0;
 
-            std::string title = "2D Character Sprites - FPS: " + std::to_string(static_cast<int>(fps));
+            std::string title = "2D Character Sprites - FPS: " + std::to_string(static_cast<int>(FrameTracker.fps));
             glfwSetWindowTitle(window, title.c_str());
         }
     }
@@ -382,14 +414,14 @@ unsigned int CreateShaderProgram(const char* vertex_source, const char* fragment
 }
 
 void MousePositionCallback(GLFWwindow* window, double xpos, double ypos) {
-    mouse_x = static_cast<float>(xpos);
-    mouse_y = static_cast<float>(ypos);
+    Mouse.pos_x = static_cast<float>(xpos);
+    Mouse.pos_y = static_cast<float>(ypos);
 }
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     if (action == GLFW_PRESS) {
         if (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) {
-            mouse_tracker_visible = !mouse_tracker_visible;
+            Mouse.visible = !Mouse.visible;
         }
     }
 }
