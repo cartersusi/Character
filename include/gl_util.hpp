@@ -39,7 +39,7 @@ namespace Textures {
     };
 
     const map<int, TextureConfig> TextureLoads = {
-        {Background, {"pngs/background_1440_900.png", {Settings::SCR_WIDTH, Settings::SCR_HEIGHT}}},
+        {Background, {"pngs/background_1440_900.png", {1440.0f, 900.0f}}},
         {Floor, {"pngs/ground/stone_dark_32_32.png", {32.0f, 32.0f}}},
         {Ground, {"pngs/ground/stone_32_32.png", {32.0f, 32.0f}}},
         {GroundShawow, {"pngs/ground/shadow_32_32.png", {32.0f, 32.0f}}},
@@ -52,7 +52,7 @@ namespace Textures {
 namespace Screen {
     extern unsigned int w;
     extern unsigned int h;
-    extern bool vsync;
+    extern unsigned int vsync;
     extern bool fullscreen;
 }
 

@@ -5,7 +5,7 @@ using namespace std;
 namespace Screen {
     unsigned int w = 1440;
     unsigned int h = 900;
-    bool vsync = true;
+    unsigned int vsync = 1;
     bool fullscreen = true;
 }
 
@@ -46,9 +46,7 @@ namespace GlCallback {
 
     void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         if (action == GLFW_PRESS) {
-            if (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) {
-                Mouse::visible = !Mouse::visible;
-            }
+            (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) ? Mouse::visible = !Mouse::visible : Mouse::visible = Mouse::visible;
         }
     }
 }

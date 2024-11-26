@@ -21,9 +21,7 @@ int main() {
     auto seed = std::chrono::steady_clock::now().time_since_epoch().count();
     std::mt19937 rng(seed);
 
-    if (!glfwInit()) {
-        throw runtime_error("Failed to initialize GLFW");
-    }
+    if (!glfwInit()) throw runtime_error("Failed to initialize GLFW");
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -37,18 +35,11 @@ int main() {
         glfwTerminate();
         return -1;
     }
-    if (Screen::vsync) {
-        glfwSwapInterval(1);
-    } else {
-        glfwSwapInterval(0);
-    }
+    glfwSwapInterval(Screen::vsync);
     glfwMakeContextCurrent(window);
-
     glfwSetFramebufferSizeCallback(window, GlCallback::FramebufferSizeCallback);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        throw runtime_error("Failed to initialize GLAD");
-    }
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) throw runtime_error("Failed to initialize GLAD");
 
     const char* vertex_shader_source = R"(
     #version 330 core
@@ -80,9 +71,7 @@ int main() {
     )";
 
     unsigned int shader_program = GlShaders::CreateShaderProgram(vertex_shader_source, fragment_shader_source);
-    if (shader_program == 0) {
-        throw runtime_error("Failed to create shader program");
-    }
+    if (shader_program == 0) throw runtime_error("Failed to create shader program");
 
     float vertices[] = {
         // positions        // texture coords

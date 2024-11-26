@@ -43,15 +43,11 @@ unsigned int LoadTexture(char const* path) {
 
 Character::Character(int character_type) {
     auto character = Characters.find(character_type);
-    if (character == Characters.end()) {
-        throw runtime_error("Character type not found");
-    }
+    if (character == Characters.end()) throw runtime_error("Character type not found");
 
     auto lfn = [&](int part, unsigned int& texture, float& size) {
         auto it = character->second.find(part);
-        if (it == character->second.end()) {
-            throw runtime_error("Body part not found");
-        }
+        if (it == character->second.end()) throw runtime_error("Body part not found");
         texture = LoadTexture(it->second.path.c_str());
         size = it->second.size;
     };
