@@ -71,8 +71,8 @@ void Character::ApplyForce(float force[2]) {
 }
 
 float Character::CalculateJumpVelocity() {
-    float desired_jump_height = height * 0.75; // TODO: IMPL REAL PHYSICS
-    return sqrt(2.0 * Settings::GRAVITYPX * desired_jump_height);
+    // TODO: IMPL REAL PHYSICS
+    return sqrt(2.0 * Settings::GRAVITYPX * (height * 0.5));
 }
 
 void Character::Jump() {
@@ -86,20 +86,33 @@ void Character::Jump() {
     }
 }
 
-void Character::Move(bool move_left, bool move_right) {
+void Character::Move(bool move_left, bool move_right, bool sprinting) {
     acceleration[0] = 0.0;
     float force[2] = {0.0, 0.0};
+    float sprint_multiplier = sprinting ? 2.0f : 1.0f;
 
     if (move_left) {
-        force[0] = -Settings::SPEED * Settings::PLAYER_MASS;
+        force[0] = -Settings::SPEED * (Settings::PLAYER_MASS * sprint_multiplier);
         ApplyForce(force);
     }
     if (move_right) {
-        force[0] = Settings::SPEED * Settings::PLAYER_MASS;
+        force[0] = Settings::SPEED * (Settings::PLAYER_MASS * sprint_multiplier);
+        ApplyForce(force);
+    }
+
+    /*
+    When the player is in mid air and holds down the oppisite horiz movement key, 
+        a sliding effect occurs since full friction is not applied with this logic.
+
+    The quick fix was to use `if (on_ground) {` but now bunny hopping is too fast compared to regular movement.
+     */
+    if (on_ground) {
+        float friction = -velocity[0] * Settings::FRICTION_CO;
+        force[0] = friction * Settings::PLAYER_MASS;
         ApplyForce(force);
     }
     if (!move_left && !move_right && on_ground) {
-        float friction = -velocity[0] * Settings::FRICTION_CO;
+        float friction = -velocity[0] * (Settings::FRICTION_CO * 10);
         force[0] = friction * Settings::PLAYER_MASS;
         ApplyForce(force);
     }
@@ -162,31 +175,57 @@ void Character::UpdateTimes(float dt) {
     }
 }
 
-void Character::Render(glm::mat4& model, unsigned int shader_program, float torso_positionX, float torso_positionY) {
+void Character::Render(glm::mat4& model, unsigned int shader_program, float torso_positionX, float torso_positionY, float angle, bool flip_x) {
+    // !flip_x
     /*  1. left-leg  2. right-leg  3. left-arm  4. torso  5. head  6. right-arm  */
+    // flip_x
+    /*  1. left-leg  2. right-leg  3. right-arm  4. torso  5. head  6. left-arm  */
     
     GlShaders::Render(model, shader_program, textures[LeftLeg], 
         torso_positionX - (texture_sizes[LeftLeg] * 0.33), torso_positionY - (texture_sizes[Torso] * 0.25), 
-        texture_sizes[LeftLeg], texture_sizes[LeftLeg]
+        texture_sizes[LeftLeg], texture_sizes[LeftLeg],
+        angle, flip_x
     );
     GlShaders::Render(model, shader_program, textures[RightLeg], 
         torso_positionX + (texture_sizes[RightLeg] * 0.5), torso_positionY - (texture_sizes[Torso] * 0.25), 
-        texture_sizes[RightLeg], texture_sizes[RightLeg]
+        texture_sizes[RightLeg], texture_sizes[RightLeg],
+        angle, flip_x
     );
-    GlShaders::Render(model, shader_program, textures[LeftArm], 
-        torso_positionX + (texture_sizes[Torso] * 0.25f), torso_positionY, 
-        texture_sizes[LeftArm], texture_sizes[LeftArm])
-    ; 
+    if (!flip_x) {
+        GlShaders::Render(model, shader_program, textures[LeftArm], 
+            torso_positionX + (texture_sizes[Torso] * 0.25f), torso_positionY, 
+            texture_sizes[LeftArm], texture_sizes[LeftArm],
+            angle, flip_x
+        );
+    } else {
+        GlShaders::Render(model, shader_program, textures[RightArm], 
+            torso_positionX - (texture_sizes[Torso] * 0.2f), torso_positionY, 
+            texture_sizes[RightArm], texture_sizes[RightArm],
+            angle, flip_x
+        );
+    }
     GlShaders::Render(model, shader_program, textures[Torso], 
         torso_positionX, torso_positionY, 
-        texture_sizes[Torso], texture_sizes[Torso]
+        texture_sizes[Torso], texture_sizes[Torso],
+        angle, flip_x
     );
     GlShaders::Render(model, shader_program, textures[Head], 
         torso_positionX, torso_positionY + (texture_sizes[Head] / 2), 
-        texture_sizes[Head], texture_sizes[Head]
+        texture_sizes[Head], texture_sizes[Head],
+        angle, flip_x
     );
-    GlShaders::Render(model, shader_program, textures[RightArm], 
-        torso_positionX - (texture_sizes[Torso] * 0.2f), torso_positionY, 
-        texture_sizes[RightArm], texture_sizes[RightArm]
-    );
+
+    if (!flip_x) {
+        GlShaders::Render(model, shader_program, textures[RightArm], 
+            torso_positionX - (texture_sizes[Torso] * 0.2f), torso_positionY, 
+            texture_sizes[RightArm], texture_sizes[RightArm],
+            angle, flip_x
+        );
+    } else {
+        GlShaders::Render(model, shader_program, textures[LeftArm], 
+            torso_positionX + (texture_sizes[Torso] * 0.25f), torso_positionY, 
+            texture_sizes[LeftArm], texture_sizes[LeftArm],
+            angle, flip_x
+        );
+    }
 }

@@ -40,9 +40,9 @@ namespace Textures {
 
     const map<int, TextureConfig> TextureLoads = {
         {Background, {"pngs/background_1440_900.png", {1440.0f, 900.0f}}},
-        {Floor, {"pngs/ground/stone_dark_32_32.png", {32.0f, 32.0f}}},
-        {Ground, {"pngs/ground/stone_32_32.png", {32.0f, 32.0f}}},
-        {GroundShawow, {"pngs/ground/shadow_32_32.png", {32.0f, 32.0f}}},
+        {Floor, {"pngs/ground/stone_dark_256_256.png", {128.0f, 128.0f}}},
+        {Ground, {"pngs/ground/stone_256_256.png", {64.0f, 64.0f}}},
+        {GroundShawow, {"pngs/ground/shadow_256_256.png", {128.0f, 128.0f}}},
         {Clouds, {"pngs/cloud_56_37.png", {56.0f, 37.0f}}},
     };
 
@@ -74,6 +74,7 @@ namespace Keys {
     extern bool move_right;
     extern bool jump_pressed;
     extern bool space_key_pressed_last_frame;
+    extern bool sprint_pressed;
 }
 
 // ----------------------------------
@@ -99,15 +100,17 @@ namespace GlCallback {
 
 namespace GlShaders {
     unsigned int CompileShader(GLenum type, const char* source);
-    unsigned int CreateShaderProgram(const char* vertex_source, const char* fragment_source);
-    void Render(
+    unsigned int CreateShaderProgram();
+    void Render (
         glm::mat4& model, 
         unsigned int shader_program, 
         unsigned int texture, 
         float x, 
         float y, 
         float width, 
-        float height
+        float height,
+        float angle,
+        bool flip_x
     );
 }
 

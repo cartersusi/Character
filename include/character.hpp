@@ -18,8 +18,8 @@ unsigned int LoadTexture(char const* path);
 
 enum CharactersEnums {
     Goblin = 0,
-    //Female = 1,
-    //Male = 2,
+    Female = 1,
+    Male = 2,
 };
 
 class Character {
@@ -43,10 +43,10 @@ public:
     void ApplyForce(float force[2]);
     float CalculateJumpVelocity();
     void Jump();
-    void Move(bool move_left, bool move_right);
+    void Move(bool move_left, bool move_right, bool sprinting);
     void Update(float dt);
     void UpdateTimes(float dt);
-    void Render(glm::mat4& model, unsigned int shader_program, float torso_positionX, float torso_positionY);
+    void Render(glm::mat4& model, unsigned int shader_program, float torso_positionX, float torso_positionY, float angle, bool flip_x);
 
     ~Character() {
         // TODO: Check if needed
@@ -77,6 +77,14 @@ private:
             {RightArm, {"pngs/goblin/Left_Arm_180_180.png", 180.0f * Settings::CHARACTER_SCALE}},
             {LeftLeg, {"pngs/goblin/Leg_128_128.png", 128.0f * Settings::CHARACTER_SCALE}},
             {RightLeg, {"pngs/goblin/Leg_128_128.png", 128.0f * Settings::CHARACTER_SCALE}}
+        }},
+        {Female, {
+            {Head, {"pngs/female/Head_480_480.png", 480.0f * Settings::CHARACTER_SCALE}},
+            {Torso, {"pngs/female/Torso_320_320.png", 320.0f * Settings::CHARACTER_SCALE * 0.75}},
+            {LeftArm, {"pngs/female/Left_Arm_180_180.png", 180.0f * Settings::CHARACTER_SCALE}},
+            {RightArm, {"pngs/female/Right_Arm_180_180.png", 180.0f * Settings::CHARACTER_SCALE}},
+            {LeftLeg, {"pngs/female/Left_Leg_128_128.png", 128.0f * Settings::CHARACTER_SCALE}},
+            {RightLeg, {"pngs/female/Right_Leg_128_128.png", 128.0f * Settings::CHARACTER_SCALE}}
         }},
     };
 };

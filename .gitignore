@@ -4,3 +4,4 @@ old/
 pngs/female/
 pngs/male/
 *.o
+*.py

@@ -23,6 +23,7 @@ namespace Keys {
     bool move_right = false;
     bool jump_pressed = false;
     bool space_key_pressed_last_frame = false;
+    bool sprint_pressed = false;
 }
 
 namespace FrameTracker {
@@ -70,7 +71,35 @@ namespace GlShaders {
         return shader;
     }
 
-    unsigned int CreateShaderProgram(const char* vertex_source, const char* fragment_source) {
+    unsigned int CreateShaderProgram() {
+        const char* vertex_source = R"(
+            #version 330 core
+            layout (location = 0) in vec3 aPos;   // Position attribute
+            layout (location = 1) in vec2 aTexCoord; // Texture coordinate attribute
+
+            out vec2 TexCoord;
+
+            uniform mat4 model;
+            uniform mat4 projection;
+
+            void main() {
+                gl_Position = projection * model * vec4(aPos, 1.0);
+                TexCoord = aTexCoord;
+            }
+        )";
+
+        const char* fragment_source = R"(
+            #version 330 core
+            out vec4 FragColor;
+
+            in vec2 TexCoord;
+
+            uniform sampler2D texture1;
+
+            void main() {
+                FragColor = texture(texture1, TexCoord);
+            }
+        )";
         unsigned int vertex_shader = GlShaders::CompileShader(GL_VERTEX_SHADER, vertex_source);
         if (vertex_shader == 0) {
             throw runtime_error("Failed to compile vertex shader");
@@ -106,20 +135,28 @@ namespace GlShaders {
     }
 
     void Render(
-        glm::mat4& model, 
-        unsigned int shader_program, 
-        unsigned int texture, 
-        float x, 
-        float y, 
-        float width, 
-        float height
-    ) {   
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(x, y, 0.0f));
-        model = glm::scale(model, glm::vec3(width, height, 1.0f));
-        glUniformMatrix4fv(glGetUniformLocation(shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glm::mat4& model, 
+    unsigned int shader_program, 
+    unsigned int texture, 
+    float x, 
+    float y, 
+    float width, 
+    float height,
+    float angle,
+    bool flip_x
+) {
+    float x_co = flip_x ? -1.0f : 1.0f;
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x , y, 0.0f));
+    if (angle != 0.0f) {
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
     }
+    model = glm::scale(model, glm::vec3(width * x_co, height, 1.0f));
+
+    glUniformMatrix4fv(glGetUniformLocation(shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
 
 }

@@ -6,11 +6,11 @@ namespace Settings {
     constexpr float MAX_GROUND_Y = 300.0f;
     constexpr float MIN_GROUND_Y = 150.0f;
     constexpr float PLAYER_MASS = 75.0f; // kg
-    constexpr float FRICTION_CO = 15.0f; // Friction coefficient
-    constexpr float SPEED = 600.0f; // px/s
-    constexpr float MAX_SPEED = 600.0f; // px/s
+    constexpr float FRICTION_CO = 5.0f; // Friction coefficient
+    constexpr float SPEED = 1600.0f; // px/s
+    constexpr float MAX_SPEED = 1600.0f; // px/s
     constexpr float JUMP_BUFFER_TIME = 0.05f;
-    constexpr float COYOTE_TIME = 0.05f;
+    constexpr float COYOTE_TIME = 0.01f;
     constexpr float GRAVITY = 9.81f;    // m/s^2
     const unsigned int SCR_WIDTH = 1440;
     const unsigned int SCR_HEIGHT = 900;

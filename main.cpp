@@ -29,7 +29,7 @@ int main() {
 
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    GLFWwindow* window = glfwCreateWindow(Screen::w, Screen::h, "2D Character Sprites", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(Screen::w, Screen::h, "Goblin Slayer", NULL, NULL);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
         glfwTerminate();
@@ -41,36 +41,7 @@ int main() {
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) throw runtime_error("Failed to initialize GLAD");
 
-    const char* vertex_shader_source = R"(
-    #version 330 core
-    layout (location = 0) in vec3 aPos;   // Position attribute
-    layout (location = 1) in vec2 aTexCoord; // Texture coordinate attribute
-
-    out vec2 TexCoord;
-
-    uniform mat4 model;
-    uniform mat4 projection;
-
-    void main() {
-        gl_Position = projection * model * vec4(aPos, 1.0);
-        TexCoord = aTexCoord;
-    }
-    )";
-
-    const char* fragment_shader_source = R"(
-    #version 330 core
-    out vec4 FragColor;
-
-    in vec2 TexCoord;
-
-    uniform sampler2D texture1;
-
-    void main() {
-        FragColor = texture(texture1, TexCoord);
-    }
-    )";
-
-    unsigned int shader_program = GlShaders::CreateShaderProgram(vertex_shader_source, fragment_shader_source);
+    unsigned int shader_program = GlShaders::CreateShaderProgram();
     if (shader_program == 0) throw runtime_error("Failed to create shader program");
 
     float vertices[] = {
@@ -109,7 +80,7 @@ int main() {
     auto goblin = Character(Goblin);
     vector<Textures::Texture> textures;
     for (int i = 0; i < Textures::N_Textures; i++) {
-        textures.push_back({
+        textures.push_back({ 
             LoadTexture(Textures::TextureLoads.find(i)->second.texture_path.c_str()),
             Textures::TextureLoads.find(i)->second.dim
         });
@@ -135,7 +106,7 @@ int main() {
         uniform_int_distribution<int> y_cloud(1, static_cast<int>(Screen::h - textures[Textures::Clouds].dim.h));
         cloud_pos.push_back({static_cast<float>(x_cloud(rng)), static_cast<float>(y_cloud(rng))});
 
-        uniform_int_distribution<int> w_cloud(56*4, 56*8); 
+        uniform_int_distribution<int> w_cloud(56*2, 56*4); 
         float h_cloud = static_cast<float>(w_cloud(rng));
         clouds_size.push_back({h_cloud, h_cloud * 0.64286f}); 
     }
@@ -153,13 +124,14 @@ int main() {
         Keys::move_left = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
         Keys::move_right = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
         Keys::jump_pressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+        Keys::sprint_pressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
 
         if (Keys::jump_pressed && !Keys::space_key_pressed_last_frame) {
             goblin.time_since_jump_pressed = 0.0;
         }
         Keys::space_key_pressed_last_frame = Keys::jump_pressed;
         
-        goblin.Move(Keys::move_left, Keys::move_right);
+        goblin.Move(Keys::move_left, Keys::move_right, Keys::sprint_pressed);
         goblin.UpdateTimes(FrameTracker::dt);
         
         if (goblin.time_since_jump_pressed >= 0.0) {
@@ -182,14 +154,16 @@ int main() {
         // background 
         GlShaders::Render(model, shader_program, textures[Textures::Background].texture,
             Screen::w / 2.0f, Screen::h / 2.0f, 
-            Screen::w, Screen::h
+            Screen::w, Screen::h,
+            0.0f, false
         );
 
         // clouds
         for (int i = 0; i < n_clouds; i++) {
             GlShaders::Render(model, shader_program, textures[Textures::Clouds].texture,
                 cloud_pos[i].first, cloud_pos[i].second, 
-                clouds_size[i].first, clouds_size[i].second
+                clouds_size[i].first, clouds_size[i].second,
+                0.0f, false
             );
         }
 
@@ -198,7 +172,8 @@ int main() {
             for (int j = 0; j <= (Settings::MIN_GROUND_Y - textures[Textures::Ground].dim.w) / textures[Textures::Ground].dim.w; j++) {
                 GlShaders::Render(model, shader_program, textures[Textures::Ground].texture, 
                     textures[Textures::Ground].dim.w * i, textures[Textures::Ground].dim.w * j, 
-                    textures[Textures::Ground].dim.w, textures[Textures::Ground].dim.w
+                    textures[Textures::Ground].dim.w, textures[Textures::Ground].dim.w,
+                    0.0f, false
                 );
             }
         }
@@ -207,25 +182,30 @@ int main() {
         for (int i = 0; i <= Screen::w / textures[Textures::Floor].dim.w; i++) {
             GlShaders::Render(model, shader_program, textures[Textures::Floor].texture,
                 textures[Textures::Floor].dim.w * i, Settings::MIN_GROUND_Y - (textures[Textures::Floor].dim.w*0.75), 
-                textures[Textures::Floor].dim.w, textures[Textures::Floor].dim.w
+                textures[Textures::Floor].dim.w, textures[Textures::Floor].dim.w,
+                0.0f, false
             );
             GlShaders::Render(model, shader_program, textures[Textures::GroundShawow].texture,
                 textures[Textures::GroundShawow].dim.w * i, Settings::MIN_GROUND_Y, 
-                textures[Textures::GroundShawow].dim.w, textures[Textures::GroundShawow].dim.w
+                textures[Textures::GroundShawow].dim.w, textures[Textures::GroundShawow].dim.w,
+                0.0f, false
             );
         }
 
         // character
         goblin.Render(model, shader_program,
             goblin.position[0], 
-            Screen::h - (goblin.position[1] + goblin.height * 0.33f)
+            Screen::h - (goblin.position[1] + goblin.height * 0.5f),
+            0.0f, Keys::move_left
         );
 
         // mouse icon
         if (Mouse::visible) { 
             GlShaders::Render(model, shader_program, Mouse::texture,
-                Mouse::pos_x * ((float)Screen::w / window_w), Screen::h - (Mouse::pos_y * ((float)Screen::h / window_h)), 
-                Mouse::size_x, Mouse::size_y
+                //Mouse::pos_x * ((float)Screen::w / window_w), (Screen::h - (Mouse::pos_y * ((float)Screen::h / window_h)) - 16), 
+                Mouse::pos_x * ((float)Screen::w / window_w), (Screen::h - (Mouse::pos_y * ((float)Screen::h / window_h))), 
+                Mouse::size_x, Mouse::size_y,
+                -45.0f, false
             );
         }
 
