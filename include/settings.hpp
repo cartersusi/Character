@@ -15,6 +15,7 @@ namespace Settings {
     const unsigned int SCR_WIDTH = 1440;
     const unsigned int SCR_HEIGHT = 900;
     constexpr float GRAVITYPX = GRAVITY * SCR_HEIGHT;  // px/s^2
+    constexpr float EPSILON = 1e-4f;
 }
 
 #endif

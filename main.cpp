@@ -17,7 +17,21 @@ using namespace std;
 // TODO: Find why this conflicts with Screen
 int window_w, window_h;
 
-int main() {
+void ArgParse(int argc, char* argv[], bool& debug_mode) {
+    for (int i = 1; i < argc; ++i) {
+        string arg = argv[i];
+        if (arg == "-d" || arg == "--debug") {
+            debug_mode = true;
+            cout << "Debug mode activated\n";
+        }
+    }
+}
+
+int main(int argc, char* argv[]) {
+    bool debug_mode = false;
+
+    ArgParse(argc, argv, debug_mode);
+
     auto seed = std::chrono::steady_clock::now().time_since_epoch().count();
     std::mt19937 rng(seed);
 
@@ -77,7 +91,7 @@ int main() {
     glfwSetCursorPosCallback(window, GlCallback::MousePositionCallback);
     glfwSetMouseButtonCallback(window, GlCallback::MouseButtonCallback);
 
-    auto goblin = Character(Goblin);
+    Character goblin(Goblin, true);
     vector<Textures::Texture> textures;
     for (int i = 0; i < Textures::N_Textures; i++) {
         textures.push_back({ 
@@ -193,11 +207,7 @@ int main() {
         }
 
         // character
-        goblin.Render(model, shader_program,
-            goblin.position[0], 
-            Screen::h - (goblin.position[1] + goblin.height * 0.5f),
-            0.0f, Keys::move_left
-        );
+        goblin.Render(model, shader_program, Keys::move_right, Keys::move_left);
 
         // mouse icon
         if (Mouse::visible) { 

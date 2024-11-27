@@ -27,6 +27,19 @@ public:
     float height;
     float width;
     
+    float left_leg_angle;
+    float right_leg_angle;
+    float left_arm_angle;
+    float right_arm_angle;
+    float limb_animation_timer;
+    float limb_animation_speed;
+    float limb_rotation_amplitude;
+    float limb_animation_blend;
+
+    // TODO: Add quiet DEBUG vars
+    bool DEBUG_MODE;
+    float max_limb_angle;
+    
     array<float, 2> position;
     array<float, 2> velocity;
     array<float, 2> acceleration;
@@ -38,7 +51,7 @@ public:
     array<unsigned int, 6> textures;
     array<float, 6> texture_sizes;
 
-    Character(int character_type);
+    Character(int character_type, bool debug_mode = false);
 
     void ApplyForce(float force[2]);
     float CalculateJumpVelocity();
@@ -46,7 +59,7 @@ public:
     void Move(bool move_left, bool move_right, bool sprinting);
     void Update(float dt);
     void UpdateTimes(float dt);
-    void Render(glm::mat4& model, unsigned int shader_program, float torso_positionX, float torso_positionY, float angle, bool flip_x);
+    void Render(glm::mat4& model, unsigned int shader_program, bool moving_right, bool moving_left);
 
     ~Character() {
         // TODO: Check if needed
