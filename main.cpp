@@ -29,7 +29,6 @@ void ArgParse(int argc, char* argv[], bool& debug_mode) {
 
 int main(int argc, char* argv[]) {
     bool debug_mode = false;
-
     ArgParse(argc, argv, debug_mode);
 
     auto seed = std::chrono::steady_clock::now().time_since_epoch().count();
@@ -91,7 +90,7 @@ int main(int argc, char* argv[]) {
     glfwSetCursorPosCallback(window, GlCallback::MousePositionCallback);
     glfwSetMouseButtonCallback(window, GlCallback::MouseButtonCallback);
 
-    Character goblin(Goblin, true);
+    Character goblin(Goblin, debug_mode);
     vector<Textures::Texture> textures;
     for (int i = 0; i < Textures::N_Textures; i++) {
         textures.push_back({ 

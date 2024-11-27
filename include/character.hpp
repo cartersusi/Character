@@ -5,6 +5,7 @@
 #include <map>
 #include <array>
 #include <iostream>
+#include <cmath>
 
 #include "stb_image.h"
 
@@ -39,17 +40,23 @@ public:
     // TODO: Add quiet DEBUG vars
     bool DEBUG_MODE;
     float max_limb_angle;
+
     
     array<float, 2> position;
     array<float, 2> velocity;
     array<float, 2> acceleration;
     
-    bool on_ground;
     float time_since_left_ground;
     float time_since_jump_pressed;
+    bool on_ground;
+
+    bool is_colliding;
 
     array<unsigned int, 6> textures;
     array<float, 6> texture_sizes;
+
+    unsigned int collision_texture;
+    float collision_texture_size;
 
     Character(int character_type, bool debug_mode = false);
 
@@ -78,7 +85,7 @@ private:
     };
 
     struct BodyPart {
-        std::string path;
+        string path;
         float size;
     };
 
@@ -100,6 +107,9 @@ private:
             {RightLeg, {"pngs/female/Right_Leg_128_128.png", 128.0f * Settings::CHARACTER_SCALE}}
         }},
     };
+
+    const char* collision_texture_path = "pngs/collision_box.png";
+    const float collision_texture_init_size = 480.0f;
 };
 
 #endif // CHARACTER_HPP

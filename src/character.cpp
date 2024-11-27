@@ -1,6 +1,4 @@
-
 #include <character.hpp>
-#include <cmath>
 
 unsigned int LoadTexture(char const* path) {
     stbi_set_flip_vertically_on_load(true);
@@ -58,8 +56,8 @@ Character::Character(int character_type, bool debug_mode) {
         lfn(i, textures[i], texture_sizes[i]);
     }
     
-    height = texture_sizes[Torso] + texture_sizes[Head] + texture_sizes[LeftLeg];
-    width = texture_sizes[Torso];
+    height = texture_sizes[Torso] + (texture_sizes[Head] * 0.5f) + (texture_sizes[LeftLeg] * 0.33f);
+    width = (texture_sizes[Torso] > texture_sizes[Head]) ? texture_sizes[Torso] : texture_sizes[Head];
     
     left_leg_angle = 0.0f;
     right_leg_angle = 0.0f;
@@ -75,9 +73,13 @@ Character::Character(int character_type, bool debug_mode) {
     acceleration = {0.0f, 0.0f};
     on_ground = true;
 
+    is_colliding = false;
+
     DEBUG_MODE = debug_mode;
     if (DEBUG_MODE) {
         max_limb_angle = 0.0f;
+        collision_texture = LoadTexture(collision_texture_path);
+        collision_texture_size = collision_texture_init_size;
     }
 }
 
@@ -200,6 +202,14 @@ void Character::Update(float dt) {
         position[0] = Settings::SCR_WIDTH - width;
         velocity[0] = 0.0;
     }
+
+    is_colliding = false;
+    if (position[0] <= 0.0f || position[0] + width >= Settings::SCR_WIDTH) {
+        is_colliding = true;
+    }
+    if (position[1] + height >= Settings::SCR_HEIGHT || position[1] <= 0.0f) {
+        is_colliding = true;
+    }
 }
 
 void Character::UpdateTimes(float dt) {
@@ -234,7 +244,6 @@ void Character::Render(glm::mat4& model, unsigned int shader_program, bool movin
     float r_leg_offset = texture_sizes[RightLeg] * Settings::CHARACTER_SCALE * r;
     float l_arm_offset = texture_sizes[LeftArm] * Settings::CHARACTER_SCALE * r;
     float r_arm_offset = texture_sizes[RightArm] * Settings::CHARACTER_SCALE * r;
-
 
     GlShaders::Render(model, shader_program, textures[LeftLeg], 
         torso_positionX - (texture_sizes[LeftLeg] * 0.33) + l_leg_offset, torso_positionY - (texture_sizes[Torso] * 0.25), 
@@ -283,6 +292,19 @@ void Character::Render(glm::mat4& model, unsigned int shader_program, bool movin
             torso_positionX + (texture_sizes[Torso] * 0.25f) - l_arm_offset, torso_positionY, 
             texture_sizes[LeftArm], texture_sizes[LeftArm],
             left_arm_angle, flip_x
+        );
+    }
+
+    if (DEBUG_MODE) {
+        float box_x = position[0];
+        float box_y = Screen::h - (position[1] + (height * Settings::CHARACTER_SCALE));
+        float box_width = width;
+        float box_height = height;
+
+        GlShaders::Render(model, shader_program, collision_texture, 
+            box_x, box_y, 
+            box_width, box_height,
+            0.0f, flip_x
         );
     }
 }
