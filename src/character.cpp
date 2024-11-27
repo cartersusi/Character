@@ -228,6 +228,7 @@ void Character::Render(glm::mat4& model, unsigned int shader_program, bool movin
 
     bool flip_x = moving_left ? !moving_right : false;
 
+    // Only x offset, y offset is hardly visible while in motion.
     float r = right_arm_angle * M_PI / 180.0;
     float l_leg_offset = texture_sizes[LeftLeg] * Settings::CHARACTER_SCALE * r;
     float r_leg_offset = texture_sizes[RightLeg] * Settings::CHARACTER_SCALE * r;
